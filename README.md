@@ -1,5 +1,10 @@
 # desk-robot
 
+**This fork:** stationary SSD1309 hardware, an Omarchy Python service, and
+Hash-backed vision/conversation through an existing subscription harness.
+[Setup and verified bring-up checkpoint](docs/hash-bringup.md). The upstream
+README below describes the original servo/SH1106/API-key build.
+
 A small desk robot with a face, a voice, and a camera. Say "hey Rocky" and it
 turns its head, looks at you, and answers out loud in character. The body is
 a $24 microcontroller with an OLED screen on a pan-tilt neck. The brain is a

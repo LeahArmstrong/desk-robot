@@ -24,7 +24,11 @@
 
 // 1.3" SH1106 128x64 OLED over hardware I2C (SDA=D4/GPIO5, SCL=D5/GPIO6).
 // R2 = rotated 180 degrees: the OLED is mounted upside down on the head.
+#if defined(DESK_ROBOT_SSD1309)
+U8G2_SSD1309_128X64_NONAME0_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+#else
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R2, U8X8_PIN_NONE);
+#endif
 
 Face face(u8g2);
 ServoNeck panNeck;

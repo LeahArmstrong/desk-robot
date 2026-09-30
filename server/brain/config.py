@@ -18,7 +18,17 @@ if _ENV_FILE.is_file():
             os.environ.setdefault(_k.strip(), _v)
 
 # The robot's name — the wake word is "hey <name>".
-ROBOT_NAME = "Rocky"
+ROBOT_NAME = os.environ.get("ROBOT_NAME", "Rocky")
+
+# Fork defaults: Hash owns conversation; Omarchy owns speech and the device.
+BRAIN_BACKEND = os.environ.get("BRAIN_BACKEND", "hash")
+HASH_URL = os.environ.get("HASH_URL", "wss://hash.trash.lan")
+HASH_CA_FILE = os.environ.get("HASH_CA_FILE", str(Path.home() / ".local/share/desk-robot/hash-tls.pem"))
+HASH_IDENTITY_FILE = os.environ.get("HASH_IDENTITY_FILE", str(Path.home() / ".local/share/desk-robot/hash-device.json"))
+HASH_SESSION_KEY = os.environ.get("HASH_SESSION_KEY", "agent:main:desk-robot")
+HASH_TIMEOUT = float(os.environ.get("HASH_TIMEOUT", "90"))
+HAS_SERVOS = os.environ.get("HAS_SERVOS", "0") == "1"
+HEADLESS = os.environ.get("HEADLESS", "0") == "1"
 
 # Your name — Rocky calls you this. Set HUMAN_NAME in server/.env so it
 # stays out of the repo; "friend" until you do.
@@ -42,7 +52,7 @@ LLM_BASE_URL = "https://openrouter.ai/api/v1"
 MODEL = "anthropic/claude-haiku-4.5"
 
 # WebSocket port the robot connects to.
-PORT = 8765
+PORT = int(os.environ.get("ROBOT_PORT", "8765"))
 
 # Rocky's voice and how much he says. The character itself (system prompt,
 # canned lines) is in personality.py.
@@ -96,7 +106,7 @@ DEBUG_SAVE_TTS = False
 DEBUG_TTS_CHECK = False
 
 # Listening. The robot's mic when it is connected, the computer's otherwise.
-LISTEN_ON_START = True
+LISTEN_ON_START = os.environ.get("LISTEN_ON_START", "1") == "1"
 WAKE_PHRASES = [  # what speech-to-text tends to hear for "hey Rocky"
     "hey rocky",
     "hey rocket",
@@ -163,7 +173,7 @@ EMOTIONS = [
 # Camera. The robot streams small JPEGs while connected; the live view
 # is at http://localhost:<LIVE_VIEW_PORT>/ on this computer.
 CAMERA_FPS = 10
-LIVE_VIEW_PORT = 8766
+LIVE_VIEW_PORT = int(os.environ.get("LIVE_VIEW_PORT", "8766"))
 LIVE_VIEW_BIND = "127.0.0.1"  # this computer only. "0.0.0.0" would show the camera to the whole LAN.
 SEND_CAMERA_TO_BRAIN = True  # let Rocky see the camera when a question is about seeing
 # A frame is attached only when the question is about seeing (any of these
