@@ -25,7 +25,9 @@
 // 1.3" SH1106 128x64 OLED over hardware I2C (SDA=D4/GPIO5, SCL=D5/GPIO6).
 // R2 = rotated 180 degrees: the OLED is mounted upside down on the head.
 #if defined(DESK_ROBOT_SSD1309)
-U8G2_SSD1309_128X64_NONAME0_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+// HiLetgo 2.42OLED-IIC v1.1 may omit ACK unless its D2 jumper is bridged.
+// U8g2 software I2C ignores ACK; keep the same SCL=D5, SDA=D4 wiring.
+U8G2_SSD1309_128X64_NONAME0_F_SW_I2C u8g2(U8G2_R0, SCL, SDA, U8X8_PIN_NONE);
 #else
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R2, U8X8_PIN_NONE);
 #endif
@@ -192,6 +194,15 @@ void setup() {
     Wire.beginTransmission(address);
     Serial.printf("boot: OLED I2C 0x%02X status=%u (0=ack)\n", address, Wire.endTransmission());
   }
+#if defined(DESK_ROBOT_SSD1309)
+  Wire.end();  // Release the hardware peripheral before software I2C owns the pins.
+  pinMode(SDA, INPUT_PULLUP);
+  pinMode(SCL, INPUT_PULLUP);
+  delay(10);
+  Serial.printf("boot: OLED idle SDA(D4)=%d SCL(D5)=%d (both should be 1)\n",
+                digitalRead(SDA), digitalRead(SCL));
+  Serial.println(F("boot: OLED software I2C (ACK not required)"));
+#endif
   randomSeed(esp_random());
 
   // ESP32Servo wants its LEDC timers claimed up front.

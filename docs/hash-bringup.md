@@ -27,7 +27,9 @@ Software acceptance on 2026-09-30:
 - SSD1309 PlatformIO build passes. The first USB flash and startup diagnostic
   flash succeeded after wiring. Camera initialized and returned a 3,656-byte
   JPEG; the OLED remains blank and gives I2C NACK at both 0x3C and 0x3D.
-  Display wiring/interface inspection is the next step. Speaker/mic not yet tested.
+  After correcting VDD to 3V3, hardware I2C timed out (status 5).
+  Software I2C now runs without requiring ACK; the owner still reports a completely blank panel.
+  Speaker/mic not yet tested.
 
 These do not prove physical OLED, microphone or speaker acceptance.
 This is an owner-operated bench prototype, with no installed background unit.
@@ -134,13 +136,28 @@ The XIAO enumerates as Espressif USB Serial/JTAG, serial `7C:4F:AD:1F:6E:C8`,
 currently `/dev/ttyACM0`. Prefer the matching `/dev/serial/by-id/` path and
 re-identify it before upload. Chip detection reports ESP32-S3 rev 0.2, 8 MB PSRAM.
 The startup diagnostics print memory, OLED ACK status and initialization stages.
-Status 0 means an ACK; observed status 2 at both display addresses means neither
-address acknowledged. This is not proof of a broken panel: inspect its power,
-ground, SDA/SCL connections and whether the module is configured for I2C.
+Status 0 means an ACK; the initial status 2 meant neither address acknowledged.
+After the owner corrected supply wiring, hardware I2C returned status 5 (timeout).
+Both lines read high with pull-ups after releasing Wire. The software-I2C build
+boots fully and camera capture still passes; the owner still reports a completely blank panel.
+
+The supplied HiLetgo product image identifies `2.42OLED-IIC VER:1.1`, with
+a note meaning "For ACK response, short D2." A missing ACK therefore does not
+prove absent wiring or a damaged panel. The SSD1309 profile now uses U8g2
+`NONAME0_F_SW_I2C` on SCL=D5/SDA=D4; its software transport ignores ACK.
+The hardware Wire peripheral is released after the diagnostic scan. Leave the
+D2 solder jumper untouched; hardware SH1106 I2C remains the upstream option.
+The printed 0x78/0x7A are 8-bit address bytes, equivalent to 7-bit 0x3C/0x3D.
+
+[HiLetgo's listing](https://www.amazon.com/dp/B0CFF5SD1T) specifies a 3–5 V supply.
+That does not establish 5 V signal compatibility with the ESP32. This build
+continues to supply the panel from 3V3; prior VDD=5V alone is not proof of damage.
 
 With USB disconnected, check OLED VCC→3V3, GND→GND, SDA→D4 and SCL→D5 by the
 actual printed pin labels. Confirm header joints are soldered if the board was
-supplied with loose headers. Obtain a photo of the OLED connector and XIAO
-connections before choosing a different display driver or changing power.
+supplied with loose headers. The owner confirms the OLED header is soldered. The visible empty pads in the
+front photos must not be treated as evidence of an unsoldered active header.
+Next isolate the display using four direct OLED-to-XIAO wires, bypassing the
+breadboard rails; power and ground cannot be traced reliably from these photos.
 The serial console works after the startup delay; opening a serial client can
 reset this board, so wait for the USB-only startup line before sending commands.
