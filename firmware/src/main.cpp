@@ -84,6 +84,7 @@ void printHelp() {
   Serial.println(F("  snap         grab one frame and report its size"));
   Serial.println(F("  temp         chip temperature"));
   Serial.println(F("  renderstats  last/worst frame transfer time since previous query"));
+  Serial.println(F("  audiostats   I2S readiness, transferred bytes and errors (not acoustic proof)"));
   Serial.println(F("  help         this text"));
 }
 
@@ -176,6 +177,13 @@ void handleCommand(String line) {
       camera.setStreaming(was, 10);
       Serial.printf("snap: %u bytes (%s)\n", n, n ? "ok" : "no frame");
     }
+  } else if (cmd == "audiostats") {
+    Serial.printf("audio: ready=%d speaking=%d written=%u errors=%lu lastError=%d buffered=%u underruns=%lu\n",
+                  speaker.ready(), speaker.speaking(),
+                  static_cast<unsigned>(speaker.lastWrittenBytes()),
+                  static_cast<unsigned long>(speaker.lastWriteErrors()), speaker.lastI2sError(),
+                  static_cast<unsigned>(speaker.lastPrebuffered()),
+                  static_cast<unsigned long>(speaker.lastUnderruns()));
   } else if (cmd == "renderstats") {
     Serial.printf("render: last=%lu us max=%lu us target=%lu us\n",
                   static_cast<unsigned long>(lastRenderUs),

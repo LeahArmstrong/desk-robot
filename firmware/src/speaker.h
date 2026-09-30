@@ -35,6 +35,10 @@ class Speaker {
   uint32_t lastUnderruns() const { return underruns_; }
   size_t lastPrebuffered() const { return prebuffered_; }
   uint32_t lastPrebufferMs() const { return prebufferMs_; }
+  bool ready() const { return ready_; }
+  size_t lastWrittenBytes() const { return writtenBytes_; }
+  uint32_t lastWriteErrors() const { return writeErrors_; }
+  int lastI2sError() const { return lastI2sError_; }
 
  private:
   static void taskEntry(void* self);
@@ -43,6 +47,10 @@ class Speaker {
   size_t readInto(uint8_t* out, size_t maxLen);
 
   uint8_t* ring_ = nullptr;
+  bool ready_ = false;
+  volatile size_t writtenBytes_ = 0;
+  volatile uint32_t writeErrors_ = 0;
+  volatile int lastI2sError_ = 0;
   size_t ringSize_ = 0;
   volatile size_t head_ = 0;  // write index
   volatile size_t tail_ = 0;  // read index

@@ -28,7 +28,9 @@ Software acceptance on 2026-09-30:
   directly connected to XIAO pins, the panel ACKs at 0x3C. Owner confirms smooth
   neutral/happy/surprised animations; the banded/shutter redraw is gone.
   Frame rendering measured 31.5–32.1 ms against a 33 ms target. Camera still
-  captures JPEGs (4,352 bytes in this test). Amp/speaker remain disconnected.
+  captures JPEGs (4,352 bytes in this test). The amp/speaker were subsequently
+  reconnected, but there is still no clearly audible test tone. The owner
+  isolated the buzz to the connected OLED; it disappears with the OLED removed.
 
 OLED visible-render acceptance now passes. Physical microphone and speaker
 acceptance remain pending.
@@ -180,8 +182,64 @@ The specific original wiring fault was not isolated; the direct rewire fixed
 communication, then faster transport fixed visible banding. Do not infer that
 5 V destroyed the panel or that its header was unsoldered.
 
-Keep OLED GND→GND, VDD→3V3, SCL→D5, SDA→D4. The amp/speaker are disconnected;
-reconnect with USB unplugged for the next low-volume `beep` test. Wi-Fi remains
+Keep OLED GND→GND, VDD→3V3, SCL→D5, SDA→D4. The amp/speaker were subsequently reconnected; see the audio checkpoint below. Wi-Fi remains
 unconfigured. Use `pio run -j 2 -e xiao_ssd1309` for bounded build parallelism;
 an unrestricted build archiver was killed with Error -9, and the two-job retry
 passed. The no-ACK fallback remains separately selectable for diagnosis only.
+
+## Audio checkpoint — no confirmed tone; buzz isolated to display
+
+After the owner reconnected the amp/speaker, 0.4-second 440 Hz `beep` tests at
+volume 0.15 and 0.4 produced no audible tone. Three spaced repetitions at 0.4
+also produced no tone. The buzz was initially attributed to the speaker, but
+the owner subsequently confirmed it disappears when all four OLED wires are
+disconnected. Do not treat that buzz as evidence of speaker activity or damage.
+Repeated full-firmware tests after rewiring still gave no clearly audible tone.
+
+Owner meter checks: approximately 5 V at the XIAO and amplifier supply,
+continuity through power/ground and BCLK D0, LRC D1, DIN D2, and 4 ohms across
+the disconnected speaker leads. The speaker wires were reseated in the screw
+terminals. These checks found no open circuit but do not verify I2S waveforms
+or acoustic output. Disconnect USB before touching wiring; speaker output
+minus must not connect to ground. Leave amp SD and GAIN unconnected.
+
+The firmware now checks speaker buffer allocation, I2S driver/pin setup, task
+creation and I2S start, and exposes `audiostats` (USB or existing command path).
+Observed: ready=1, I2S1 BCLK=GPIO1/D0, LRC=GPIO2/D1, DIN=GPIO3/D2,
+buffer=1,048,576 bytes. Each test queued 12,800 mono bytes and submitted 25,600
+stereo bytes to I2S; errors=0, lastError=0, underruns=0, speaking=0 afterward.
+These are software/driver receipts, not electrical or acoustic proof. Do not
+claim the amp or speaker works because `beep` printed or DMA accepted samples.
+
+### Standalone audio diagnostic
+
+`xiao_audio_only` selects only `firmware/src/audio_only.cpp`. Normal robot
+profiles exclude that file. It initializes serial and I2S1 directly, without
+camera, microphone, OLED, servos, Wi-Fi or the application's speaker buffer/task.
+After identifying the actual USB device and owner confirmation of wiring:
+
+```sh
+cd /home/leah/Work/desk-robot/firmware
+pio run -j 2 -e xiao_audio_only
+pio run -j 2 -e xiao_audio_only -t upload --upload-port <confirmed-port>
+```
+
+At 115200 baud, wait for `audio-only: READY`, then send `tone`. It sends one
+two-second 440 Hz sine wave on both stereo channels at 16 kHz, 16-bit, peak
+3200/32767 (the same peak as integrated `beep` at volume 0.4), with short ramps.
+It reports transfer/stop errors and submitted bytes; `status` reports readiness.
+There is no automatic tone on boot and no application/network command support.
+Expected transfer is 128,000 stereo bytes; driver success is still not sound
+acceptance. Keep the OLED disconnected during this isolation test.
+
+To restore eyes and the application after diagnosis, unplug USB before
+reconnecting the OLED, then upload `xiao_ssd1309` to the confirmed port.
+Do not change GAIN or firmware pin assignments to mask an unverified connection.
+
+Standalone audio bench result (2026-09-30): build and upload passed; serial
+reported READY, submitted=128000 expected=128000 driverOK=1, then ready=1.
+Owner confirms no sound from this standalone test. Next measure amp SD-to-GND
+DC voltage to check shutdown state; no more tones are running. The flashed profile is xiao_audio_only;
+normal robot features are unavailable until xiao_ssd1309 is restored.
+Build log: /tmp/desk-robot-audio-only-build.log; upload:
+/tmp/desk-robot-audio-only-flash.log.
