@@ -24,14 +24,14 @@ Software acceptance on 2026-09-30:
   passed. Whisper, Silero and Smart Turn models are cached locally.
 - Nineteen tests pass, including a real headless service and simulated ESP32
   that receives expression JSON and PCM speech, then shuts down on SIGTERM.
-- SSD1309 PlatformIO build passes. The first USB flash and startup diagnostic
-  flash succeeded after wiring. Camera initialized and returned a 3,656-byte
-  JPEG; the OLED remains blank and gives I2C NACK at both 0x3C and 0x3D.
-  After correcting VDD to 3V3, hardware I2C timed out (status 5).
-  Software I2C now runs without requiring ACK; the owner still reports a completely blank panel.
-  Speaker/mic not yet tested.
+- SSD1309 hardware-I2C build and upload pass. With only USB and the OLED
+  directly connected to XIAO pins, the panel ACKs at 0x3C. Owner confirms smooth
+  neutral/happy/surprised animations; the banded/shutter redraw is gone.
+  Frame rendering measured 31.5–32.1 ms against a 33 ms target. Camera still
+  captures JPEGs (4,352 bytes in this test). Amp/speaker remain disconnected.
 
-These do not prove physical OLED, microphone or speaker acceptance.
+OLED visible-render acceptance now passes. Physical microphone and speaker
+acceptance remain pending.
 This is an owner-operated bench prototype, with no installed background unit.
 The 8–18 s observed response time remains a tuning item.
 
@@ -139,13 +139,14 @@ The startup diagnostics print memory, OLED ACK status and initialization stages.
 Status 0 means an ACK; the initial status 2 meant neither address acknowledged.
 After the owner corrected supply wiring, hardware I2C returned status 5 (timeout).
 Both lines read high with pull-ups after releasing Wire. The software-I2C build
-boots fully and camera capture still passes; the owner still reports a completely blank panel.
+boots fully and camera capture still passes; the panel initially stayed blank; see the direct-wiring update below.
 
 The supplied HiLetgo product image identifies `2.42OLED-IIC VER:1.1`, with
 a note meaning "For ACK response, short D2." A missing ACK therefore does not
-prove absent wiring or a damaged panel. The SSD1309 profile now uses U8g2
-`NONAME0_F_SW_I2C` on SCL=D5/SDA=D4; its software transport ignores ACK.
-The hardware Wire peripheral is released after the diagnostic scan. Leave the
+prove absent wiring or a damaged panel. The no-ACK diagnostic used U8g2 `NONAME0_F_SW_I2C` on SCL=D5/SDA=D4.
+It is now an optional `xiao_ssd1309_noack` build, not the default: after direct
+rewiring this panel ACKs normally and renders smoothly with hardware I2C.
+The fallback ignores ACK and releases Wire after the scan, but redraw is slower. Leave the
 D2 solder jumper untouched; hardware SH1106 I2C remains the upstream option.
 The printed 0x78/0x7A are 8-bit address bytes, equivalent to 7-bit 0x3C/0x3D.
 
@@ -157,7 +158,30 @@ With USB disconnected, check OLED VCC→3V3, GND→GND, SDA→D4 and SCL→D5 by
 actual printed pin labels. Confirm header joints are soldered if the board was
 supplied with loose headers. The owner confirms the OLED header is soldered. The visible empty pads in the
 front photos must not be treated as evidence of an unsoldered active header.
-Next isolate the display using four direct OLED-to-XIAO wires, bypassing the
-breadboard rails; power and ground cannot be traced reliably from these photos.
+Four direct OLED-to-XIAO wires subsequently restored communication; see
+Direct-wiring acceptance below. The original wiring fault was not isolated.
 The serial console works after the startup delay; opening a serial client can
 reset this board, so wait for the USB-only startup line before sending commands.
+
+## Direct-wiring acceptance
+
+The owner rebuilt the wiring with only USB and the OLED connected directly to
+XIAO pins. Software-I2C eye animations appeared but horizontal bands redrew in
+sequence. After reseating USB, the same device enumerated again; a fresh scan
+confirmed ACK at **0x3C**, no ACK at 0x3D. The pictured optional D2 ACK jumper
+was therefore not a reason to require software I2C on this physical board.
+
+The default `xiao_ssd1309` profile now uses hardware I2C at 400 kHz. The owner
+confirmed smooth animations and no shutter effect after neutral/happy/surprised
+commands. `renderstats` reported 31,504–31,941 us last-frame times, worst
+32,124 us in the sampled windows, against 33,000 us target. It measures drawing
+plus transfer, not the panel's internal refresh. Camera still captures frames.
+The specific original wiring fault was not isolated; the direct rewire fixed
+communication, then faster transport fixed visible banding. Do not infer that
+5 V destroyed the panel or that its header was unsoldered.
+
+Keep OLED GND→GND, VDD→3V3, SCL→D5, SDA→D4. The amp/speaker are disconnected;
+reconnect with USB unplugged for the next low-volume `beep` test. Wi-Fi remains
+unconfigured. Use `pio run -j 2 -e xiao_ssd1309` for bounded build parallelism;
+an unrestricted build archiver was killed with Error -9, and the two-job retry
+passed. The no-ACK fallback remains separately selectable for diagnosis only.

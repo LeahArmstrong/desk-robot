@@ -25,9 +25,15 @@
 // 1.3" SH1106 128x64 OLED over hardware I2C (SDA=D4/GPIO5, SCL=D5/GPIO6).
 // R2 = rotated 180 degrees: the OLED is mounted upside down on the head.
 #if defined(DESK_ROBOT_SSD1309)
+#if defined(DESK_ROBOT_OLED_NOACK)
 // HiLetgo 2.42OLED-IIC v1.1 may omit ACK unless its D2 jumper is bridged.
 // U8g2 software I2C ignores ACK; keep the same SCL=D5, SDA=D4 wiring.
 U8G2_SSD1309_128X64_NONAME0_F_SW_I2C u8g2(U8G2_R0, SCL, SDA, U8X8_PIN_NONE);
+#else
+// This physical panel ACKs at 0x3C with direct wiring. Hardware I2C avoids
+// the visible banded redraw of the slower software transport.
+U8G2_SSD1309_128X64_NONAME0_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+#endif
 #else
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R2, U8X8_PIN_NONE);
 #endif
@@ -43,6 +49,7 @@ uint32_t nextTempMs = 0;
 volatile bool speakDonePending = false;  // set by the speaker task, sent from loop()
 
 uint32_t lastFrameMs = 0;
+uint32_t lastRenderUs = 0, maxRenderUs = 0;
 uint32_t nextStateMs = 0;
 bool demoMode = true;  // cycles emotions on its own; off while the brain is connected
 bool brainConnected = false;
@@ -76,6 +83,7 @@ void printHelp() {
   Serial.println(F("  stream on|off [fps]  stream camera JPEGs to the brain"));
   Serial.println(F("  snap         grab one frame and report its size"));
   Serial.println(F("  temp         chip temperature"));
+  Serial.println(F("  renderstats  last/worst frame transfer time since previous query"));
   Serial.println(F("  help         this text"));
 }
 
@@ -168,6 +176,12 @@ void handleCommand(String line) {
       camera.setStreaming(was, 10);
       Serial.printf("snap: %u bytes (%s)\n", n, n ? "ok" : "no frame");
     }
+  } else if (cmd == "renderstats") {
+    Serial.printf("render: last=%lu us max=%lu us target=%lu us\n",
+                  static_cast<unsigned long>(lastRenderUs),
+                  static_cast<unsigned long>(maxRenderUs),
+                  static_cast<unsigned long>(FRAME_INTERVAL_MS * 1000));
+    maxRenderUs = 0;
   } else if (cmd == "temp") {
     Serial.printf("chip %.1f C\n", temperatureRead());
   } else if (cmd == "glance") {
@@ -194,7 +208,7 @@ void setup() {
     Wire.beginTransmission(address);
     Serial.printf("boot: OLED I2C 0x%02X status=%u (0=ack)\n", address, Wire.endTransmission());
   }
-#if defined(DESK_ROBOT_SSD1309)
+#if defined(DESK_ROBOT_OLED_NOACK)
   Wire.end();  // Release the hardware peripheral before software I2C owns the pins.
   pinMode(SDA, INPUT_PULLUP);
   pinMode(SCL, INPUT_PULLUP);
@@ -202,6 +216,8 @@ void setup() {
   Serial.printf("boot: OLED idle SDA(D4)=%d SCL(D5)=%d (both should be 1)\n",
                 digitalRead(SDA), digitalRead(SCL));
   Serial.println(F("boot: OLED software I2C (ACK not required)"));
+#else
+  Serial.println(F("boot: OLED hardware I2C (ACK required, 400 kHz rendering)"));
 #endif
   randomSeed(esp_random());
 
@@ -318,7 +334,10 @@ void loop() {
   if (now - lastFrameMs >= FRAME_INTERVAL_MS) {
     lastFrameMs = now;
     face.setTalking(speaker.speaking(), speaker.level());
+    const uint32_t renderStartUs = micros();
     face.update(now);
+    lastRenderUs = micros() - renderStartUs;
+    maxRenderUs = max(maxRenderUs, lastRenderUs);
     // While one axis swings, keep the other powered so it can't sag.
     if (panNeck.moving()) tiltNeck.hold();
     if (tiltNeck.moving()) panNeck.hold();
