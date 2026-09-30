@@ -29,8 +29,9 @@ Software acceptance on 2026-09-30:
   neutral/happy/surprised animations; the banded/shutter redraw is gone.
   Frame rendering measured 31.5–32.1 ms against a 33 ms target. Camera still
   captures JPEGs (4,352 bytes in this test). The amp/speaker were subsequently
-  reconnected, but there is still no clearly audible test tone. The owner
-  isolated the buzz to the connected OLED; it disappears with the OLED removed.
+  reconnected. A crackling tone occurred while the owner held a jumper against
+  amp DIN; a repeat was silent. After amp solder reflow, a tone played with
+  heavy static. Clean, repeatable sound is still pending. The owner isolated the earlier buzz to the connected OLED; it disappears with the OLED removed.
 
 OLED visible-render acceptance now passes. Physical microphone and speaker
 acceptance remain pending.
@@ -187,7 +188,7 @@ unconfigured. Use `pio run -j 2 -e xiao_ssd1309` for bounded build parallelism;
 an unrestricted build archiver was killed with Error -9, and the two-job retry
 passed. The no-ACK fallback remains separately selectable for diagnosis only.
 
-## Audio checkpoint — no confirmed tone; buzz isolated to display
+## Audio diagnosis — tone after solder reflow; clean playback pending
 
 After the owner reconnected the amp/speaker, 0.4-second 440 Hz `beep` tests at
 volume 0.15 and 0.4 produced no audible tone. Three spaced repetitions at 0.4
@@ -266,7 +267,7 @@ check: even an expected voltage does not prove frequency, timing or valid data.
 Expected digital rates are BCLK512kHz and LRC16kHz, but the owner's meter is not
 specified for measuring frequency at these logic amplitudes. Clock mode ran for 30 seconds (1,920,000 bytes, driverOK=1). Owner
 measured LRC-to-GND at 1.65 V. A later separate run also measured BCLK-to-GND
-at 1.65 V; DIN remains unmeasured. The brief BCLK reading described as
+at 1.65 V; DIN was subsequently probed; the recalled voltage was uncertain, as recorded below. The brief BCLK reading described as
 "a few hundred" had no unit recorded and must not be treated as hundreds of volts. Build/upload log:
 `/tmp/desk-robot-audio-clocks-flash.log`.
 
@@ -299,11 +300,41 @@ and do not use a 9 V or lithium-ion cell. A response establishes movement,
 not full audio fidelity. Compare with a spare speaker if uncertain.
 [Manufacturer explanation of the 1.5 V speaker test](https://eminence.com/a/faq).
 
-Current next measurement is DIN-to-GND in DC volts during the new standalone
+DIN was tested using the standalone
 `data` command: 10 seconds of the original low-level 440 Hz tone, peak3200,
 then automatic stop. It is not silent clocks: actual audio samples must be
 transmitted to distinguish a stuck-low data line from valid silence. Expected
 DC average is roughly mid-supply for this signed PCM stream, but the reading
 cannot validate bits or timing. Build/upload passed:
-`/tmp/desk-robot-audio-data-flash.log`. Await owner probe readiness; no tone runs
-automatically on boot. Other test commands retain their levels/durations.
+`/tmp/desk-robot-audio-data-flash.log`. No tone runs automatically on boot;
+other test commands retain their levels/durations.
+
+Latest physical result: the ten-second low-level `data` tone became audible
+while the owner probed DIN. The recalled ~3 V reading was uncertain and is not
+a validated data waveform measurement. Removing both probes and repeating
+made it silent again. Replacing/reseating the DIN jumper through the breadboard
+also remained silent. Connecting the jumper to the top of the amp DIN pin,
+bypassing the breadboard connection, restored the tone **with crackling**.
+Every ten-second run submitted 640,000 bytes with driverOK=1; it was the physical
+connection change that distinguished these results. This implicates the
+breadboard/header/contact path but does not isolate the exact failed contact
+or prove the crackling cause. Neither amplifier nor speaker is proven defective.
+
+A further identical repeat was silent again (640,000 bytes, driverOK=1).
+Direct contact has not produced repeatable sound. Owner confirms the successful crackling run required holding/pressing the
+jumper against the amp pin. Tone tests stopped. Next USB-off remove the amp
+from the breadboard and use snug female sockets on its long underside header
+pins, avoiding pressure contact on short top-side soldered ends. Keep the same
+pin mapping, speaker and supply capacitor. Await stable hands-free wiring. Keep OLED disconnected and leave GAIN/SD untouched.
+Disconnect USB before altering connections. Clear, repeatable sound is required
+before restoring normal robot firmware; clean audio acceptance remains open.
+
+Solder-reflow follow-up: owner paused testing, reflowed the amp solder and
+reconnected. The unchanged ten-second low-level `data` test submitted640000,
+driverOK1; owner reports a tone with heavy static. This is partial acoustic
+success, not clean playback or a confirmed root cause. The planned female
+connector setup has not yet been tested. Next USB off, amp off breadboard,
+snug female sockets on all five long underside header pins: VIN→5V,
+GND→common ground, BCLK→D0, LRC→D1, DIN→D2. Keep the same speaker, capacitor
+across5V/GND, SD/GAIN unconnected, and OLED disconnected. Retest at the original
+low level once owner confirms ready; no further volume escalation is needed.
