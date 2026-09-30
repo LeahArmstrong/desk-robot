@@ -238,8 +238,11 @@ Do not change GAIN or firmware pin assignments to mask an unverified connection.
 
 Standalone audio bench result (2026-09-30): build and upload passed; serial
 reported READY, submitted=128000 expected=128000 driverOK=1, then ready=1.
-Owner confirms no sound from this standalone test. Next measure amp SD-to-GND
-DC voltage to check shutdown state; no more tones are running. The flashed profile is xiao_audio_only;
+Owner confirms no sound from this standalone test. SD-to-GND measures 0.48 V
+(owner meter reading), within the enabled stereo-average range; shutdown is
+not indicated. Owner has a spare MAX98357A; next power-off swap of amp only, retaining
+speaker/wires and leaving SD/GAIN and OLED disconnected, then retest on owner
+readiness. Clock/data waveforms remain unmeasured. No more tones are running. The flashed profile is xiao_audio_only;
 normal robot features are unavailable until xiao_ssd1309 is restored.
 Build log: /tmp/desk-robot-audio-only-build.log; upload:
 /tmp/desk-robot-audio-only-flash.log.
