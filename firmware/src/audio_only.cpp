@@ -21,7 +21,7 @@ bool check(esp_err_t result, const char* operation) {
   return false;
 }
 
-void tone() {
+void tone(float peak = kPeak, size_t totalFrames = kToneFrames) {
   if (!ready) {
     Serial.println("audio-only: not ready; no tone sent");
     return;
@@ -29,19 +29,21 @@ void tone() {
   if (!check(i2s_zero_dma_buffer(kPort), "clear DMA") ||
       !check(i2s_start(kPort), "start")) return;
 
-  Serial.println("audio-only: tone START 440 Hz, 2 seconds, peak=3200/32767");
+  Serial.printf("audio-only: %s START %u seconds, peak=%.0f/32767\n",
+                peak == 0 ? "silent clocks" : "440 Hz tone",
+                static_cast<unsigned>(totalFrames / kRate), peak);
   int16_t samples[kFramesPerChunk * 2];
   size_t total = 0;
   bool complete = true;
-  for (size_t first = 0; first < kToneFrames; first += kFramesPerChunk) {
-    const size_t frames = min(kFramesPerChunk, kToneFrames - first);
+  for (size_t first = 0; first < totalFrames; first += kFramesPerChunk) {
+    const size_t frames = min(kFramesPerChunk, totalFrames - first);
     for (size_t i = 0; i < frames; ++i) {
       const size_t frame = first + i;
       // Ten-millisecond ramps keep start/stop clicks out of the test.
       const float envelope = min(1.0f, min(frame / 160.0f,
-                                          (kToneFrames - 1 - frame) / 160.0f));
+                                          (totalFrames - 1 - frame) / 160.0f));
       const int16_t value = static_cast<int16_t>(
-          kPeak * envelope * sinf(2.0f * PI * 440.0f * frame / kRate));
+          peak * envelope * sinf(2.0f * PI * 440.0f * frame / kRate));
       samples[2 * i] = samples[2 * i + 1] = value;
     }
     size_t written = 0;
@@ -60,8 +62,10 @@ void tone() {
   delay(100);
   const bool cleared = check(i2s_zero_dma_buffer(kPort), "clear DMA after tone");
   const bool stopped = check(i2s_stop(kPort), "stop");
-  Serial.printf("audio-only: tone END submitted=%u expected=128000 driverOK=%d\n",
-                static_cast<unsigned>(total), complete && cleared && stopped);
+  Serial.printf("audio-only: END submitted=%u expected=%u driverOK=%d\n",
+                static_cast<unsigned>(total),
+                static_cast<unsigned>(totalFrames * 2 * sizeof(int16_t)),
+                complete && cleared && stopped);
   Serial.println("audio-only: driver receipt only; audible result requires owner confirmation");
 }
 }  // namespace
@@ -96,7 +100,7 @@ void setup() {
       !check(i2s_stop(kPort), "initial stop")) return;
   ready = true;
   Serial.println("audio-only: READY I2S1 16000 Hz stereo 16-bit; BCLK=D0 LRC=D1 DIN=D2");
-  Serial.println("audio-only: commands: tone, status");
+  Serial.println("audio-only: commands: tone, louder, clocks, status");
 }
 
 void loop() {
@@ -104,8 +108,10 @@ void loop() {
     String command = Serial.readStringUntil('\n');
     command.trim();
     if (command == "tone") tone();
+    else if (command == "louder") tone(8000.0f);
+    else if (command == "clocks") tone(0.0f, kRate * 30);
     else if (command == "status") Serial.printf("audio-only: ready=%d\n", ready);
-    else if (command.length()) Serial.println("audio-only: commands: tone, status");
+    else if (command.length()) Serial.println("audio-only: commands: tone, louder, clocks, status");
   }
   delay(5);
 }

@@ -240,9 +240,30 @@ Standalone audio bench result (2026-09-30): build and upload passed; serial
 reported READY, submitted=128000 expected=128000 driverOK=1, then ready=1.
 Owner confirms no sound from this standalone test. SD-to-GND measures 0.48 V
 (owner meter reading), within the enabled stereo-average range; shutdown is
-not indicated. Owner has a spare MAX98357A; next power-off swap of amp only, retaining
-speaker/wires and leaving SD/GAIN and OLED disconnected, then retest on owner
-readiness. Clock/data waveforms remain unmeasured. No more tones are running. The flashed profile is xiao_audio_only;
+not indicated. Owner swapped in a spare MAX98357A with the same speaker/wires and OLED
+disconnected. The repeated two-second tone again submitted 128,000 bytes with
+driverOK=1, but the owner heard nothing. The 0.48 V SD reading was from the
+first amp; the replacement has not been metered. Clock/data waveforms remain
+unmeasured. Owner meter is Southwire 10040N: AC volts specified 50–400 Hz; frequency
+sensitivity >8 V RMS, so 3.3 V I2S frequency readings are not guaranteed;
+speaker terminals carry bridge-tied class-D switching, not clean analog audio. No more tones are running. The flashed profile is xiao_audio_only;
 normal robot features are unavailable until xiao_ssd1309 is restored.
 Build log: /tmp/desk-robot-audio-only-build.log; upload:
 /tmp/desk-robot-audio-only-flash.log.
+
+Volume comparison: added serial `louder` to the standalone diagnostic only.
+It sends the same 2-second 440 Hz tone at peak 8000/32767 (2.5 times the default
+3200 peak, +8 dB). No GAIN wiring changes. Flashed and sent once: submitted
+128000, driverOK=1; owner confirms still no sound. Build/upload evidence:
+`/tmp/desk-robot-audio-louder-flash.log`. Default `tone` remains at peak3200. Volume increase did not restore sound.
+Meter specifications: [Southwire 10040N manual, printed pp.15–16](https://assets.unilogcorp.com/187/ITEM/DOC/Southwire_102725405_Instruction_Installation_Manual.pdf).
+
+Timed clock check: standalone `clocks` sends **zero-valued audio for 30 seconds**,
+then stops I2S. It is silent and does not run on boot. With the meter in DC volts,
+black at amp GND and red on BCLK or LRC (not speaker outputs), a roughly 50%-duty
+3.3 V clock is expected to average near 1.65 V. This is only a coarse activity
+check: even an expected voltage does not prove frequency, timing or valid data.
+Expected digital rates are BCLK512kHz and LRC16kHz, but the owner's meter is not
+specified for measuring frequency at these logic amplitudes. Clock mode is
+prepared; owner measurement not yet taken. Build/upload log:
+`/tmp/desk-robot-audio-clocks-flash.log`.
