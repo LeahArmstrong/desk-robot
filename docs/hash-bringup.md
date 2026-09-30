@@ -264,6 +264,33 @@ black at amp GND and red on BCLK or LRC (not speaker outputs), a roughly 50%-dut
 3.3 V clock is expected to average near 1.65 V. This is only a coarse activity
 check: even an expected voltage does not prove frequency, timing or valid data.
 Expected digital rates are BCLK512kHz and LRC16kHz, but the owner's meter is not
-specified for measuring frequency at these logic amplitudes. Clock mode is
-prepared; owner measurement not yet taken. Build/upload log:
+specified for measuring frequency at these logic amplitudes. Clock mode ran for 30 seconds (1,920,000 bytes, driverOK=1). Owner
+measured LRC-to-GND at 1.65 V during the run; BCLK/DIN remain unmeasured. Build/upload log:
 `/tmp/desk-robot-audio-clocks-flash.log`.
+
+Owner supplied purchase screenshots: AITRIP three-pack MAX98357A soldered
+modules and DWEII four-pack 4-ohm 3 W speakers. Reopened Amazon page displays
+an 8-ohm variation and says a different variation was purchased; that page does
+not establish that the delivered speaker differs from the order. Owner earlier
+measured 4 ohms across the disconnected speaker leads.
+
+At owner request, standalone `high` adds a two-second 440 Hz tone at peak
+16000/32767 (48.8% digital full scale, twice `louder` amplitude). It does not
+change default `tone`, `louder`, amp GAIN or wiring. Build/upload passed
+(`/tmp/desk-robot-audio-high-flash.log`), then high submitted128000 driverOK1.
+Owner confirmed the high test remained silent. BCLK measurement was deferred
+for the explicitly requested full-scale test below; it remains outstanding.
+
+Owner then explicitly requested a full-volume check before the next clock
+measurement. Added `full`: one second of 440 Hz at peak32767/32767, with the
+same short ramps. Build/upload passed (`/tmp/desk-robot-audio-full-flash.log`);
+64,000 stereo bytes submitted, driverOK=1. Owner reports a click or faint
+sound, not a confirmed sustained tone; idle again afterward. No automatic playback at boot, no GAIN changes.
+
+Next is an independent speaker movement check: unplug
+USB, disconnect BOTH speaker leads from the amp, then briefly tap them across
+one ordinary 1.5 V AA/AAA cell (red to +, black to -). Expect a small click or
+cone twitch on contact/release; remove immediately, do not hold DC on the coil,
+and do not use a 9 V or lithium-ion cell. A response establishes movement,
+not full audio fidelity. Compare with a spare speaker if uncertain.
+[Manufacturer explanation of the 1.5 V speaker test](https://eminence.com/a/faq).
