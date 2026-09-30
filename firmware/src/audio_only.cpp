@@ -100,7 +100,7 @@ void setup() {
       !check(i2s_stop(kPort), "initial stop")) return;
   ready = true;
   Serial.println("audio-only: READY I2S1 16000 Hz stereo 16-bit; BCLK=D0 LRC=D1 DIN=D2");
-  Serial.println("audio-only: commands: tone, louder, high, full, clocks, status");
+  Serial.println("audio-only: commands: tone, louder, high, full, clocks, data, status");
 }
 
 void loop() {
@@ -112,8 +112,9 @@ void loop() {
     else if (command == "high") tone(16000.0f);
     else if (command == "full") tone(32767.0f, kRate);
     else if (command == "clocks") tone(0.0f, kRate * 30);
+    else if (command == "data") tone(kPeak, kRate * 10);
     else if (command == "status") Serial.printf("audio-only: ready=%d\n", ready);
-    else if (command.length()) Serial.println("audio-only: commands: tone, louder, high, full, clocks, status");
+    else if (command.length()) Serial.println("audio-only: commands: tone, louder, high, full, clocks, data, status");
   }
   delay(5);
 }

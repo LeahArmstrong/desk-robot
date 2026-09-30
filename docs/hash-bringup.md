@@ -265,7 +265,9 @@ black at amp GND and red on BCLK or LRC (not speaker outputs), a roughly 50%-dut
 check: even an expected voltage does not prove frequency, timing or valid data.
 Expected digital rates are BCLK512kHz and LRC16kHz, but the owner's meter is not
 specified for measuring frequency at these logic amplitudes. Clock mode ran for 30 seconds (1,920,000 bytes, driverOK=1). Owner
-measured LRC-to-GND at 1.65 V during the run; BCLK/DIN remain unmeasured. Build/upload log:
+measured LRC-to-GND at 1.65 V. A later separate run also measured BCLK-to-GND
+at 1.65 V; DIN remains unmeasured. The brief BCLK reading described as
+"a few hundred" had no unit recorded and must not be treated as hundreds of volts. Build/upload log:
 `/tmp/desk-robot-audio-clocks-flash.log`.
 
 Owner supplied purchase screenshots: AITRIP three-pack MAX98357A soldered
@@ -279,7 +281,7 @@ At owner request, standalone `high` adds a two-second 440 Hz tone at peak
 change default `tone`, `louder`, amp GAIN or wiring. Build/upload passed
 (`/tmp/desk-robot-audio-high-flash.log`), then high submitted128000 driverOK1.
 Owner confirmed the high test remained silent. BCLK measurement was deferred
-for the explicitly requested full-scale test below; it remains outstanding.
+for the explicitly requested full-scale test below, then completed as recorded above.
 
 Owner then explicitly requested a full-volume check before the next clock
 measurement. Added `full`: one second of 440 Hz at peak32767/32767, with the
@@ -287,10 +289,21 @@ same short ramps. Build/upload passed (`/tmp/desk-robot-audio-full-flash.log`);
 64,000 stereo bytes submitted, driverOK=1. Owner reports a click or faint
 sound, not a confirmed sustained tone; idle again afterward. No automatic playback at boot, no GAIN changes.
 
-Next is an independent speaker movement check: unplug
+The independent speaker movement check was completed: owner reports noise
+when attached to an AA battery. This confirms basic acoustic response, not
+full fidelity. Procedure for reference: unplug
 USB, disconnect BOTH speaker leads from the amp, then briefly tap them across
 one ordinary 1.5 V AA/AAA cell (red to +, black to -). Expect a small click or
 cone twitch on contact/release; remove immediately, do not hold DC on the coil,
 and do not use a 9 V or lithium-ion cell. A response establishes movement,
 not full audio fidelity. Compare with a spare speaker if uncertain.
 [Manufacturer explanation of the 1.5 V speaker test](https://eminence.com/a/faq).
+
+Current next measurement is DIN-to-GND in DC volts during the new standalone
+`data` command: 10 seconds of the original low-level 440 Hz tone, peak3200,
+then automatic stop. It is not silent clocks: actual audio samples must be
+transmitted to distinguish a stuck-low data line from valid silence. Expected
+DC average is roughly mid-supply for this signed PCM stream, but the reading
+cannot validate bits or timing. Build/upload passed:
+`/tmp/desk-robot-audio-data-flash.log`. Await owner probe readiness; no tone runs
+automatically on boot. Other test commands retain their levels/durations.
