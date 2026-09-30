@@ -226,10 +226,8 @@ pio run -j 2 -e xiao_audio_only
 pio run -j 2 -e xiao_audio_only -t upload --upload-port <confirmed-port>
 ```
 
-The prepared diagnostic sends one three-second 440 Hz tone on each power-up/reset
-after a fixed 1.5-second delay. Upload and boot verification remain pending;
-the currently flashed `b31fb03` does not play automatically. Once installed,
-no serial connection or command is needed. Peak is 3200/32767 (about 9.8% digital full scale), duplicated to both
+The installed diagnostic sends one three-second 440 Hz tone on each power-up/reset
+after a fixed 1.5-second delay. No serial connection or command is needed. Peak is 3200/32767 (about 9.8% digital full scale), duplicated to both
 channels with short ramps; afterward I2S stops and the device waits. Expected
 startup transfer: 192,000 stereo bytes. Unplug USB before changing wiring.
 
@@ -355,7 +353,12 @@ validate the current wiring. Power/contact/digital-signal causes remain open;
 DC averages do not establish correct I2S clock frequency, timing or data.
 
 Startup-tone follow-up: owner requested independent unplug/replug tests. The
-three-second startup change builds successfully in `xiao_audio_only`; upload
-and boot verification are pending because the XIAO is absent from USB. The
-last flashed source remains `b31fb03` until that upload. Build log:
-`/tmp/desk-robot-audio-startup-build.log`. Clean acoustic output remains unverified.
+three-second startup change (`d0ee146`, `xiao_audio_only`) built and uploaded
+after USB reconnection. Boot verification is recorded below. Build/upload logs:
+`/tmp/desk-robot-audio-startup-build.log` and
+`/tmp/desk-robot-audio-startup-flash.log`. Clean acoustic output remains unverified.
+
+Startup verification: reset without sending any serial command produced exactly
+one three-second tone transfer, submitted=192000 expected=192000 driverOK=1,
+then no repeat during the nine-second observation. Log:
+`/tmp/desk-robot-audio-startup-serial.log`. Audible quality still needs owner confirmation.
