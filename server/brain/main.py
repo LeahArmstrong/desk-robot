@@ -36,6 +36,7 @@ import json
 import os
 import queue
 import secrets
+import signal
 import sys
 import threading
 import time
@@ -44,6 +45,7 @@ import websockets
 
 from . import config, mouth, personality
 from .thinking import Interrupted, RobotBrain
+from .hash_brain import HashBrain
 from .ears import Ears, normalize, strip_wake_word
 from .eyes import Eyes
 from .tracker import Tracker
@@ -81,6 +83,8 @@ VOICE_TUNABLE = {           # speaker tuning the console may change live (mouth.
 
 async def send_to_robot(payload: dict) -> bool:
     global current_emotion
+    if not config.HAS_SERVOS and payload.get("type") in {"pan", "tilt"}:
+        return False
     if payload.get("type") == "emotion":
         current_emotion = payload.get("name", current_emotion)
     if robot_socket is None:
@@ -240,6 +244,8 @@ async def look(args: dict) -> tuple[str, bytes | None]:
     """Move the head, wait for it to get there, and grab a fresh frame.
     Only the axis that was asked for moves: "left"/"right" pan, "down"/
     "level" tilt, "center" both."""
+    if not config.HAS_SERVOS:
+        return ("This robot has no servos; the camera is fixed.", eyes.latest())
     pan = tracker.pan if tracker else 0.0
     tilt = tracker.tilt if tracker else 0.0
     move_pan = move_tilt = False
@@ -300,6 +306,8 @@ async def set_head_held(held: bool) -> None:
 
 
 async def set_tracking(on: bool, announce: bool = True) -> tuple[str, bytes | None]:
+    if on and not config.HAS_SERVOS:
+        return ("This robot has no servos; face following is unavailable.", None)
     if tracker is None:
         return ("no tracker running", None)
     tracker.enabled = on
@@ -602,6 +610,8 @@ def console_state() -> dict:
     """Extra fields for /status: everything the page shows beyond the camera."""
     now = time.time()
     return {
+        "has_servos": config.HAS_SERVOS,
+        "backend": config.BRAIN_BACKEND,
         "robot": robot_socket is not None,
         "listening": ears is not None,
         "mic": ears.source if ears is not None else None,
@@ -640,6 +650,8 @@ def _number(payload: dict, key: str, lo: float, hi: float) -> float:
 
 async def _console_command(action: str, payload: dict) -> dict:
     global awake_until
+    if not config.HAS_SERVOS and action in {"head", "center", "track"}:
+        raise ValueError("This robot has no servos")
     if action == "emotion":
         name = payload.get("name")
         if name not in config.EMOTIONS:
@@ -905,7 +917,7 @@ async def console_loop() -> None:
 
 
 async def main() -> None:
-    print(f"{config.ROBOT_NAME} brain server — model {config.MODEL}")
+    print(f"{config.ROBOT_NAME} brain server — backend {config.BRAIN_BACKEND}")
     print(f"listening for the robot on ws://0.0.0.0:{config.PORT}")
     eyes.state_provider = console_state
     eyes.command_handler = console_command
@@ -916,7 +928,12 @@ async def main() -> None:
     global tracker, brain, main_loop
     loop = asyncio.get_running_loop()
     main_loop = loop
-    brain = RobotBrain(ABILITIES)
+    if config.BRAIN_BACKEND == "hash":
+        brain = HashBrain()
+    elif config.BRAIN_BACKEND == "api":
+        brain = RobotBrain(ABILITIES if config.HAS_SERVOS else {})
+    else:
+        raise ValueError("BRAIN_BACKEND must be hash or api")
     tracker = Tracker(eyes, lambda p, t, on: loop.call_soon_threadsafe(head_moves.put_nowait, (p, t, on)))
     eyes.has_annotator = True
     tracker.start()
@@ -929,8 +946,15 @@ async def main() -> None:
         if config.LISTEN_ON_START:
             await start_listening()
         try:
-            await console_loop()
+            if config.HEADLESS:
+                stop = asyncio.Event()
+                for sig in (signal.SIGTERM, signal.SIGINT):
+                    loop.add_signal_handler(sig, stop.set)
+                await stop.wait()
+            else:
+                await console_loop()
         finally:
+            brain.abandon()
             voice_task.cancel()
             doze_task.cancel()
             head_task.cancel()

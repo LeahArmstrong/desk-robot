@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1010" height="660" viewBox="0 0 1010 660" font-family="Helvetica, Arial, sans-serif" font-size="13">
+  <rect width="960" height="660" fill="#ffffff"/>
+  <text x="505" y="24" text-anchor="middle" font-size="17" font-weight="bold" fill="#222">Desk robot breadboard wiring — physical pin positions, USB-C facing up, viewed from the top</text>
+
+  <!-- speaker -->
+  <rect x="60" y="42" width="220" height="40" rx="8" fill="#faece7" stroke="#993c1d"/>
+  <text x="170" y="60" text-anchor="middle" font-weight="bold" fill="#4a1b0c">4Ω 3W speaker</text>
+  <text x="170" y="75" text-anchor="middle" fill="#993c1d" font-size="11">to amp + / − screw terminals</text>
+  <line x1="170" y1="82" x2="170" y2="118" stroke="#444" stroke-width="1.5"/>
+
+  <!-- amp -->
+  <rect x="60" y="118" width="220" height="132" rx="8" fill="#faece7" stroke="#993c1d"/>
+  <text x="70" y="140" font-weight="bold" fill="#4a1b0c">MAX98357A amp</text>
+  <text x="70" y="156" fill="#993c1d" font-size="11">GAIN, SD left floating</text>
+  <text x="270" y="134" text-anchor="end" fill="#4a1b0c">BCLK</text>
+  <text x="270" y="174" text-anchor="end" fill="#4a1b0c">LRC</text>
+  <text x="270" y="214" text-anchor="end" fill="#4a1b0c">DIN</text>
+  <text x="100" y="240" text-anchor="middle" fill="#4a1b0c">VIN</text>
+  <text x="150" y="240" text-anchor="middle" fill="#4a1b0c">GND</text>
+
+  <!-- cap across the amp's VIN/GND drops -->
+  <line x1="100" y1="250" x2="100" y2="560" stroke="#444" stroke-width="1.5"/>
+  <line x1="150" y1="250" x2="150" y2="530" stroke="#444" stroke-width="1.5"/>
+  <rect x="72" y="300" width="106" height="52" rx="8" fill="#faece7" stroke="#993c1d"/>
+  <text x="125" y="320" text-anchor="middle" font-weight="bold" fill="#4a1b0c" font-size="12">470µF ≥10V</text>
+  <text x="100" y="340" text-anchor="middle" fill="#4a1b0c" font-size="11">+</text>
+  <text x="150" y="340" text-anchor="middle" fill="#4a1b0c" font-size="11">− stripe</text>
+
+  <!-- OLED -->
+  <rect x="320" y="270" width="220" height="110" rx="8" fill="#e1f5ee" stroke="#0f6e56"/>
+  <text x="330" y="292" font-weight="bold" fill="#085041">2.42" SSD1309 OLED</text>
+  <text x="330" y="308" fill="#0f6e56" font-size="11">I2C, addr 0x3C, no RES pin</text>
+  <text x="530" y="294" text-anchor="end" fill="#085041">SDA</text>
+  <text x="530" y="334" text-anchor="end" fill="#085041">SCL</text>
+  <text x="360" y="370" text-anchor="middle" fill="#085041">VCC</text>
+  <text x="410" y="370" text-anchor="middle" fill="#085041">GND</text>
+  <line x1="360" y1="380" x2="360" y2="590" stroke="#444" stroke-width="1.5"/>
+  <line x1="410" y1="380" x2="410" y2="530" stroke="#444" stroke-width="1.5"/>
+
+  <!-- XIAO board -->
+  <rect x="690" y="76" width="40" height="24" rx="4" fill="#bbb" stroke="#777"/>
+  <text x="710" y="70" text-anchor="middle" fill="#555" font-size="11">USB-C</text>
+  <rect x="600" y="90" width="220" height="330" rx="10" fill="#eeedfe" stroke="#534ab7"/>
+  <rect x="608" y="98" width="12" height="12" rx="2" fill="#ccc" stroke="#777"/>
+  <text x="614" y="124" text-anchor="middle" fill="#26215c" font-size="10">R</text>
+  <rect x="800" y="98" width="12" height="12" rx="2" fill="#ccc" stroke="#777"/>
+  <text x="806" y="124" text-anchor="middle" fill="#26215c" font-size="10">B</text>
+  <text x="710" y="112" text-anchor="middle" font-weight="bold" fill="#26215c" font-size="12">XIAO ESP32-S3</text>
+  <text x="710" y="396" text-anchor="middle" fill="#534ab7" font-size="10">Sense board on top: camera, mic, microSD</text>
+  <circle cx="612" cy="406" r="5" fill="none" stroke="#777"/>
+  <text x="622" y="410" fill="#534ab7" font-size="10">U.FL antenna</text>
+
+  <!-- left pads + labels (top to bottom: D0..D6) -->
+  <g fill="#c9a227" stroke="#8a6d10">
+    <circle cx="600" cy="130" r="5"/><circle cx="600" cy="170" r="5"/><circle cx="600" cy="210" r="5"/>
+    <circle cx="600" cy="250" r="5"/><circle cx="600" cy="290" r="5"/><circle cx="600" cy="330" r="5"/><circle cx="600" cy="370" r="5"/>
+  </g>
+  <g fill="#26215c" font-size="11">
+    <text x="610" y="134">D0 GPIO1</text>
+    <text x="610" y="174">D1 GPIO2</text>
+    <text x="610" y="214">D2 GPIO3</text>
+    <text x="610" y="254">D3 GPIO4</text>
+    <text x="610" y="294">D4 GPIO5 SDA</text>
+    <text x="610" y="334">D5 GPIO6 SCL</text>
+    <text x="610" y="374">D6 GPIO43</text>
+  </g>
+  <!-- right pads + labels (top to bottom: 5V, GND, 3V3, D10, D9, D8, D7) -->
+  <g fill="#c9a227" stroke="#8a6d10">
+    <circle cx="820" cy="130" r="5"/><circle cx="820" cy="170" r="5"/><circle cx="820" cy="210" r="5"/>
+    <circle cx="820" cy="250" r="5"/><circle cx="820" cy="290" r="5"/><circle cx="820" cy="330" r="5"/><circle cx="820" cy="370" r="5"/>
+  </g>
+  <g fill="#26215c" font-size="11" text-anchor="end" transform="translate(90,0)">
+    <text x="720" y="134">5V (VBUS)</text>
+    <text x="720" y="174">GND</text>
+    <text x="720" y="214">3V3</text>
+    <text x="720" y="254">D10 GPIO9</text>
+    <text x="720" y="294">D9 GPIO8</text>
+    <text x="720" y="334">D8 GPIO7</text>
+    <text x="720" y="374">D7 GPIO44</text>
+  </g>
+  <text x="710" y="440" text-anchor="middle" fill="#534ab7" font-size="11">unwired: D3, D6 (servos), D7, D8–D10 (microSD)</text>
+
+  <!-- signal wires: amp -> left pins -->
+  <g stroke="#444" stroke-width="1.5" fill="none">
+    <line x1="280" y1="130" x2="600" y2="130"/>
+    <line x1="280" y1="170" x2="600" y2="170"/>
+    <line x1="280" y1="210" x2="600" y2="210"/>
+    <line x1="540" y1="290" x2="600" y2="290"/>
+    <line x1="540" y1="330" x2="600" y2="330"/>
+  </g>
+  <text x="440" y="122" text-anchor="middle" fill="#444" font-size="11">BCLK → D0</text>
+  <text x="440" y="162" text-anchor="middle" fill="#444" font-size="11">LRC → D1</text>
+  <text x="440" y="202" text-anchor="middle" fill="#444" font-size="11">DIN → D2</text>
+
+  <!-- power wires: right pins -> rails -->
+  <g stroke="#444" stroke-width="1.5" fill="none">
+    <polyline points="820,130 860,130 860,560"/>
+    <polyline points="820,170 885,170 885,530"/>
+    <polyline points="820,210 910,210 910,590"/>
+  </g>
+
+  <!-- rails -->
+  <line x1="60" y1="530" x2="910" y2="530" stroke="#222" stroke-width="2.5"/>
+  <line x1="60" y1="560" x2="910" y2="560" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="60" y1="590" x2="910" y2="590" stroke="#d35400" stroke-width="2.5"/>
+  <text x="922" y="534" fill="#222" font-weight="bold" font-size="12">GND rail</text>
+  <text x="922" y="564" fill="#c0392b" font-weight="bold" font-size="12">5V rail</text>
+  <text x="922" y="594" fill="#d35400" font-weight="bold" font-size="12">3V3 rail</text>
+  <!-- junction dots (no dot = wires cross, not connected) -->
+  <g fill="#222">
+    <circle cx="150" cy="530" r="4"/><circle cx="410" cy="530" r="4"/><circle cx="885" cy="530" r="4"/>
+  </g>
+  <g fill="#c0392b">
+    <circle cx="100" cy="560" r="4"/><circle cx="860" cy="560" r="4"/>
+  </g>
+  <g fill="#d35400">
+    <circle cx="360" cy="590" r="4"/><circle cx="910" cy="590" r="4"/>
+  </g>
+
+  <text x="60" y="625" fill="#444" font-size="12">Dots = connections; crossing lines without a dot are not connected. Only the amp and cap use 5V; the OLED uses 3V3. Cap stripe (−) to GND.</text>
+  <text x="60" y="643" fill="#444" font-size="12">Pin order matches the official Seeed pinout (xiao-esp32s3-pinout.png): left D0→D6 top-to-bottom, right 5V, GND, 3V3, D10, D9, D8, D7.</text>
+</svg>

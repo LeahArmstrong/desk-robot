@@ -337,6 +337,9 @@
     try {
       const s = await (await fetch("/status")).json();
       status = s;
+      if (s.has_servos === false) {
+        ["pan", "tilt", "trackbtn"].forEach(id => $(id).disabled = true);
+      }
       const linked = !!s.robot;
       $("linkdot").className = "dot" + (linked ? " on" : "");
       $("link").textContent = linked ? "robot on WiFi" : "no robot";
@@ -358,7 +361,7 @@
       $("rpan").textContent = "pan " + Math.round(pan) + "°"; $("rtilt").textContent = "tilt " + Math.round(tilt) + "°";
       $("rtrack").textContent = s.tracking ? "face locked" : s.tracking_enabled ? "looking for a face" : s.head_held ? "holding" : "not tracking";
       $("rtrack").className = s.tracking ? "" : "off";
-      $("headnote").textContent = s.head_held ? "holding a pose · glances paused" : "";
+      $("headnote").textContent = s.has_servos === false ? "fixed camera · no servos" : s.head_held ? "holding a pose · glances paused" : "";
       if (!dragging.has("pan")) { $("pan").value = Math.round(pan); $("panv").textContent = Math.round(pan) + "°"; }
       if (!dragging.has("tilt")) { $("tilt").value = Math.round(tilt); $("tiltv").textContent = Math.round(tilt) + "°"; }
       if (s.volume != null && document.activeElement !== $("vol")) { $("vol").value = s.volume; $("volv").textContent = (+s.volume).toFixed(2); }

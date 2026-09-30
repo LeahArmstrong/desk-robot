@@ -61,7 +61,7 @@ constexpr bool CAMERA_HMIRROR = true;
 
 // ─── Speaker ─────────────────────────────────────────────────────────────────
 // 0.0-1.0 software volume for the MAX98357A. For more than 1.0 can give,
-// tie the amp's GAIN pin to GND (15 dB instead of the floating 9 dB).
+// tie the amp's GAIN pin to GND (12 dB instead of the floating 9 dB).
 constexpr float SPEAKER_VOLUME = 0.7f;
 
 // ─── Behavior ────────────────────────────────────────────────────────────────

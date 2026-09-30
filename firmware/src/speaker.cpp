@@ -23,6 +23,10 @@ void Speaker::begin(uint8_t bclkPin, uint8_t lrcPin, uint8_t dinPin,
   } else {
     ringSize_ = RING_BYTES;
   }
+  if (ring_ == nullptr) {
+    Serial.println(F("speaker: audio buffer allocation failed"));
+    return;
+  }
 
   i2s_config_t cfg = {};
   cfg.mode = static_cast<i2s_mode_t>(I2S_MODE_MASTER | I2S_MODE_TX);
@@ -37,7 +41,11 @@ void Speaker::begin(uint8_t bclkPin, uint8_t lrcPin, uint8_t dinPin,
   cfg.dma_buf_len = CHUNK_SAMPLES;
   cfg.use_apll = false;
   cfg.tx_desc_auto_clear = true;  // silence, not garbage, when we underrun
-  i2s_driver_install(I2S_PORT, &cfg, 0, nullptr);
+  lastI2sError_ = i2s_driver_install(I2S_PORT, &cfg, 0, nullptr);
+  if (lastI2sError_ != ESP_OK) {
+    Serial.printf("speaker: I2S driver install failed (%d)\n", lastI2sError_);
+    return;
+  }
 
   i2s_pin_config_t pins = {};
   pins.mck_io_num = I2S_PIN_NO_CHANGE;
@@ -45,24 +53,37 @@ void Speaker::begin(uint8_t bclkPin, uint8_t lrcPin, uint8_t dinPin,
   pins.ws_io_num = lrcPin;
   pins.data_out_num = dinPin;
   pins.data_in_num = I2S_PIN_NO_CHANGE;
-  i2s_set_pin(I2S_PORT, &pins);
+  lastI2sError_ = i2s_set_pin(I2S_PORT, &pins);
+  if (lastI2sError_ != ESP_OK) {
+    Serial.printf("speaker: I2S pin setup failed (%d)\n", lastI2sError_);
+    return;
+  }
   i2s_zero_dma_buffer(I2S_PORT);
   // Idle with the clocks stopped: the MAX98357A goes to standby and ignores
   // noise coupled onto its data line (camera/WiFi bursts were audible as
   // random clicks). Clocks restart when a reply begins.
   i2s_stop(I2S_PORT);
 
-  xTaskCreatePinnedToCore(taskEntry, "speaker", 4096, this, 3, nullptr, 0);
+  ready_ = xTaskCreatePinnedToCore(taskEntry, "speaker", 4096, this, 3, nullptr, 0) == pdPASS;
+  Serial.printf("speaker: ready=%d I2S1 BCLK=%u LRC=%u DIN=%u buffer=%u\n",
+                ready_, bclkPin, lrcPin, dinPin, static_cast<unsigned>(ringSize_));
 }
 
 void Speaker::beginSpeech(size_t expectedBytes) {
+  if (!ready_) return;
   i2s_zero_dma_buffer(I2S_PORT);
-  i2s_start(I2S_PORT);  // amp wakes while we pre-buffer
+  lastI2sError_ = i2s_start(I2S_PORT);  // amp wakes while we pre-buffer
+  if (lastI2sError_ != ESP_OK) {
+    Serial.printf("speaker: I2S start failed (%d)\n", lastI2sError_);
+    return;
+  }
   portENTER_CRITICAL(&lock_);
   head_ = tail_ = 0;
   ended_ = false;
   expectedBytes_ = expectedBytes;
   underruns_ = 0;
+  writtenBytes_ = 0;
+  writeErrors_ = 0;
   prebuffered_ = 0;
   speechStartMs_ = millis();
   speaking_ = true;
@@ -154,6 +175,10 @@ void Speaker::task() {
     }
     if (n > 0) level_ = 0.6f * level_ + 0.4f * sqrtf(sumSq / n);
     size_t written = 0;
-    i2s_write(I2S_PORT, stereo, n * 2 * sizeof(int16_t), &written, portMAX_DELAY);
+    lastI2sError_ = i2s_write(I2S_PORT, stereo, n * 2 * sizeof(int16_t), &written, portMAX_DELAY);
+    writtenBytes_ += written;
+    if (lastI2sError_ != ESP_OK || written != n * 2 * sizeof(int16_t)) {
+      ++writeErrors_;
+    }
   }
 }
