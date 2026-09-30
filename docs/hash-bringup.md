@@ -30,8 +30,9 @@ Software acceptance on 2026-09-30:
   Frame rendering measured 31.5–32.1 ms against a 33 ms target. Camera still
   captures JPEGs (4,352 bytes in this test). The amp/speaker were subsequently
   reconnected. A crackling tone occurred while the owner held a jumper against
-  amp DIN; a repeat was silent. After amp solder reflow, a tone played with
-  heavy static. Clean, repeatable sound is still pending. The owner isolated the earlier buzz to the connected OLED; it disappears with the OLED removed.
+  amp DIN; a repeat was silent. Solder reflow and female-connector rewiring
+  have since produced either silence or noise/heavy static. Clean, repeatable
+  sound is still pending. Current wiring/solder photos are the next step. The owner isolated the earlier buzz to the connected OLED; it disappears with the OLED removed.
 
 OLED visible-render acceptance now passes. Physical microphone and speaker
 acceptance remain pending.
@@ -225,11 +226,18 @@ pio run -j 2 -e xiao_audio_only
 pio run -j 2 -e xiao_audio_only -t upload --upload-port <confirmed-port>
 ```
 
-At 115200 baud, wait for `audio-only: READY`, then send `tone`. It sends one
+The prepared diagnostic sends one three-second 440 Hz tone on each power-up/reset
+after a fixed 1.5-second delay. Upload and boot verification remain pending;
+the currently flashed `b31fb03` does not play automatically. Once installed,
+no serial connection or command is needed. Peak is 3200/32767 (about 9.8% digital full scale), duplicated to both
+channels with short ramps; afterward I2S stops and the device waits. Expected
+startup transfer: 192,000 stereo bytes. Unplug USB before changing wiring.
+
+For an additional manual test at 115200 baud, send `tone`. It sends one
 two-second 440 Hz sine wave on both stereo channels at 16 kHz, 16-bit, peak
 3200/32767 (the same peak as integrated `beep` at volume 0.4), with short ramps.
 It reports transfer/stop errors and submitted bytes; `status` reports readiness.
-There is no automatic tone on boot and no application/network command support.
+There is no application/network command support.
 Expected transfer is 128,000 stereo bytes; driver success is still not sound
 acceptance. Keep the OLED disconnected during this isolation test.
 
@@ -288,7 +296,7 @@ Owner then explicitly requested a full-volume check before the next clock
 measurement. Added `full`: one second of 440 Hz at peak32767/32767, with the
 same short ramps. Build/upload passed (`/tmp/desk-robot-audio-full-flash.log`);
 64,000 stereo bytes submitted, driverOK=1. Owner reports a click or faint
-sound, not a confirmed sustained tone; idle again afterward. No automatic playback at boot, no GAIN changes.
+sound, not a confirmed sustained tone; idle again afterward. At that checkpoint there was no automatic playback at boot; no GAIN changes.
 
 The independent speaker movement check was completed: owner reports noise
 when attached to an AA battery. This confirms basic acoustic response, not
@@ -306,8 +314,8 @@ then automatic stop. It is not silent clocks: actual audio samples must be
 transmitted to distinguish a stuck-low data line from valid silence. Expected
 DC average is roughly mid-supply for this signed PCM stream, but the reading
 cannot validate bits or timing. Build/upload passed:
-`/tmp/desk-robot-audio-data-flash.log`. No tone runs automatically on boot;
-other test commands retain their levels/durations.
+`/tmp/desk-robot-audio-data-flash.log`. At that checkpoint no tone ran automatically on boot. The startup-tone change
+below supersedes that behavior; manual commands retain their levels/durations.
 
 Latest physical result: the ten-second low-level `data` tone became audible
 while the owner probed DIN. The recalled ~3 V reading was uncertain and is not
@@ -332,9 +340,22 @@ before restoring normal robot firmware; clean audio acceptance remains open.
 Solder-reflow follow-up: owner paused testing, reflowed the amp solder and
 reconnected. The unchanged ten-second low-level `data` test submitted640000,
 driverOK1; owner reports a tone with heavy static. This is partial acoustic
-success, not clean playback or a confirmed root cause. The planned female
-connector setup has not yet been tested. Next USB off, amp off breadboard,
-snug female sockets on all five long underside header pins: VIN→5V,
-GND→common ground, BCLK→D0, LRC→D1, DIN→D2. Keep the same speaker, capacitor
-across5V/GND, SD/GAIN unconnected, and OLED disconnected. Retest at the original
-low level once owner confirms ready; no further volume escalation is needed.
+success, not clean playback or a confirmed root cause. The subsequent test used female sockets on the five underside power/signal
+pins, with the existing mapping, speaker and capacitor. SD/GAIN and OLED
+remained disconnected. Its results follow below.
+
+Female-connector follow-up: XIAO USB initially disappeared; reseating USB restored
+its unchanged identity. A ten-second low-level test was silent. The owner then
+unwired/rewired; the next identical test produced noise with a lot of static.
+Both completed 640,000-byte transfers with driverOK=1. Clean audio still fails.
+Remote repeated tone tests stopped at this point. Request current, clear photographs of the amp
+pin labels, female connectors, reflowed solder joints and XIAO wire endpoints
+with USB unplugged. Earlier breadboard photos predate these rewires and cannot
+validate the current wiring. Power/contact/digital-signal causes remain open;
+DC averages do not establish correct I2S clock frequency, timing or data.
+
+Startup-tone follow-up: owner requested independent unplug/replug tests. The
+three-second startup change builds successfully in `xiao_audio_only`; upload
+and boot verification are pending because the XIAO is absent from USB. The
+last flashed source remains `b31fb03` until that upload. Build log:
+`/tmp/desk-robot-audio-startup-build.log`. Clean acoustic output remains unverified.

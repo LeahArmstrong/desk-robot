@@ -74,7 +74,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setTimeout(100);
   delay(1500);
-  Serial.println("audio-only: standalone diagnostic; no automatic tone");
+  Serial.println("audio-only: standalone diagnostic; one 3-second startup tone");
 
   i2s_config_t config = {};
   config.mode = static_cast<i2s_mode_t>(I2S_MODE_MASTER | I2S_MODE_TX);
@@ -101,6 +101,8 @@ void setup() {
   ready = true;
   Serial.println("audio-only: READY I2S1 16000 Hz stereo 16-bit; BCLK=D0 LRC=D1 DIN=D2");
   Serial.println("audio-only: commands: tone, louder, high, full, clocks, data, status");
+  // One bounded test on every power-up/reset; no serial host or command needed.
+  tone(kPeak, kRate * 3);
 }
 
 void loop() {
