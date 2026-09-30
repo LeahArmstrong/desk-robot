@@ -31,8 +31,10 @@ Software acceptance on 2026-09-30:
   captures JPEGs (4,352 bytes in this test). The amp/speaker were subsequently
   reconnected. A crackling tone occurred while the owner held a jumper against
   amp DIN; a repeat was silent. Solder reflow and female-connector rewiring
-  have since produced either silence or noise/heavy static. Clean, repeatable
-  sound is still pending. Current wiring/solder photos are the next step. The owner isolated the earlier buzz to the connected OLED; it disappears with the OLED removed.
+  initially produced silence or noise/heavy static. Owner subsequently obtained
+  a clean startup tone by pressing the amp header and now considers the
+  connection sufficient for provisional testing. Durable hands-free audio
+  acceptance remains open; normal firmware restoration is pending USB reconnect. The owner isolated the earlier buzz to the connected OLED; it disappears with the OLED removed.
 
 OLED visible-render acceptance now passes. Physical microphone and speaker
 acceptance remain pending.
@@ -332,8 +334,8 @@ jumper against the amp pin. Tone tests stopped. Next USB-off remove the amp
 from the breadboard and use snug female sockets on its long underside header
 pins, avoiding pressure contact on short top-side soldered ends. Keep the same
 pin mapping, speaker and supply capacitor. Await stable hands-free wiring. Keep OLED disconnected and leave GAIN/SD untouched.
-Disconnect USB before altering connections. Clear, repeatable sound is required
-before restoring normal robot firmware; clean audio acceptance remains open.
+Disconnect USB before altering connections. Owner approved provisional normal-firmware testing after a clean tone with
+header pressure. Durable hands-free playback remains an acceptance requirement.
 
 Solder-reflow follow-up: owner paused testing, reflowed the amp solder and
 reconnected. The unchanged ten-second low-level `data` test submitted640000,
@@ -362,3 +364,10 @@ Startup verification: reset without sending any serial command produced exactly
 one three-second tone transfer, submitted=192000 expected=192000 driverOK=1,
 then no repeat during the nine-second observation. Log:
 `/tmp/desk-robot-audio-startup-serial.log`. Audible quality still needs owner confirmation.
+
+Provisional continuation: owner reports pressure on the pre-soldered amp header
+can produce a clean startup tone, then reports the connection is good enough
+to continue testing. This supports an intermittent header/contact fault but
+does not independently verify a particular solder joint. Combined OLED/audio
+testing is next; normal `xiao_ssd1309` restoration awaits USB reconnection.
+Current flashed firmware remains startup-tone diagnostic `d0ee146`.
