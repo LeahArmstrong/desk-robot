@@ -34,12 +34,17 @@ Software acceptance on 2026-09-30:
   initially produced silence or noise/heavy static. Owner subsequently obtained
   a clean startup tone by pressing the amp header and now considers the
   connection sufficient for provisional testing. Durable hands-free audio
-  acceptance remains open; normal firmware restoration is pending USB reconnect. The owner isolated the earlier buzz to the connected OLED; it disappears with the OLED removed.
+  acceptance remains open. Normal `xiao_ssd1309` firmware is now restored;
+  OLED ACK, camera capture and error-free integrated beep transfer passed.
+  Owner confirms eyes working and clear tone together. The owner isolated the earlier buzz to the connected OLED; it disappears with the OLED removed.
 
-OLED visible-render acceptance now passes. Physical microphone and speaker
-acceptance remain pending.
+Physical bench acceptance now passes: owner confirms smooth eyes, clear local
+speech, a spoken arithmetic answer through Hash, and a correct camera-grounded
+reply. Wi-Fi uses the supplied external antenna; authenticated robot link and
+~10fps camera streaming pass. See the latest receipts below.
 This is an owner-operated bench prototype, with no installed background unit.
-The 8–18 s observed response time remains a tuning item.
+Current warm questions start speaking in ~5–6s; one cold/partial question took
+~21s. Durable amp contact repair and speech-pause/latency tuning remain open.
 
 ## Install and configure
 
@@ -134,7 +139,8 @@ implement arbitrary text, custom graphics or model-generated display layouts.
 The supplied pinout is a Seeed reference; source:
 https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/ . Its physical pin order
 agrees with the imported handoff wiring diagram. D7 is not marked ADC-capable;
-camera revision, power peaks and OLED constructor still require bench evidence.
+camera revision and power peaks remain unverified; the selected OLED constructor
+passed visible-render testing.
 
 ## First USB bench checkpoint
 
@@ -228,7 +234,7 @@ pio run -j 2 -e xiao_audio_only
 pio run -j 2 -e xiao_audio_only -t upload --upload-port <confirmed-port>
 ```
 
-The installed diagnostic sends one three-second 440 Hz tone on each power-up/reset
+When flashed, this diagnostic sends one three-second 440 Hz tone on each power-up/reset
 after a fixed 1.5-second delay. No serial connection or command is needed. Peak is 3200/32767 (about 9.8% digital full scale), duplicated to both
 channels with short ramps; afterward I2S stops and the device waits. Expected
 startup transfer: 192,000 stereo bytes. Unplug USB before changing wiring.
@@ -255,8 +261,8 @@ driverOK=1, but the owner heard nothing. The 0.48 V SD reading was from the
 first amp; the replacement has not been metered. Clock/data waveforms remain
 unmeasured. Owner meter is Southwire 10040N: AC volts specified 50–400 Hz; frequency
 sensitivity >8 V RMS, so 3.3 V I2S frequency readings are not guaranteed;
-speaker terminals carry bridge-tied class-D switching, not clean analog audio. No more tones are running. The flashed profile is xiao_audio_only;
-normal robot features are unavailable until xiao_ssd1309 is restored.
+speaker terminals carry bridge-tied class-D switching, not clean analog audio. No more tones are running. At that checkpoint, `xiao_audio_only` excluded normal robot features.
+Normal firmware was subsequently restored; see the latest checkpoint below.
 Build log: /tmp/desk-robot-audio-only-build.log; upload:
 /tmp/desk-robot-audio-only-flash.log.
 
@@ -333,7 +339,7 @@ Direct contact has not produced repeatable sound. Owner confirms the successful 
 jumper against the amp pin. Tone tests stopped. Next USB-off remove the amp
 from the breadboard and use snug female sockets on its long underside header
 pins, avoiding pressure contact on short top-side soldered ends. Keep the same
-pin mapping, speaker and supply capacitor. Await stable hands-free wiring. Keep OLED disconnected and leave GAIN/SD untouched.
+pin mapping, speaker and supply capacitor. During that isolation test, the OLED remained disconnected and SD/GAIN stayed untouched.
 Disconnect USB before altering connections. Owner approved provisional normal-firmware testing after a clean tone with
 header pressure. Durable hands-free playback remains an acceptance requirement.
 
@@ -369,5 +375,49 @@ Provisional continuation: owner reports pressure on the pre-soldered amp header
 can produce a clean startup tone, then reports the connection is good enough
 to continue testing. This supports an intermittent header/contact fault but
 does not independently verify a particular solder joint. Combined OLED/audio
-testing is next; normal `xiao_ssd1309` restoration awaits USB reconnection.
-Current flashed firmware remains startup-tone diagnostic `d0ee146`.
+testing follows this checkpoint; restoration is recorded below.
+
+Normal firmware restored (2026-09-30): `e8326ef`, profile `xiao_ssd1309`,
+uploaded to the verified XIAO after USB reseating. OLED ACK at0x3C; camera
+captured5353-byte JPEG. Integrated beep at volume0.4 submitted25600 stereo
+bytes, zero errors/underruns. Render last31.947ms, max43.733ms, target33ms.
+Owner confirms eyes working and a clear tone: combined display/audio passes
+provisionally. Durable amp contact repair remains open.
+At this USB-only checkpoint no Wi-Fi secrets or network session were present.
+The subsequent Wi-Fi bring-up is recorded below; no background service is installed.
+The three-second startup tone is no longer active; the separate audio-only
+profile retains it for future diagnosis. Logs:
+`/tmp/desk-robot-restored-app-flash.log`, `/tmp/desk-robot-restored-app-serial.log`.
+
+Wi-Fi bring-up: the same source/profile was rebuilt and flashed with ignored
+owner-only `firmware/include/secrets.h` (0600), using the existing 2.4GHz
+network credentials and matching robot token without printing them. Omarchy
+remains192.168.40.133. Interactive Python service is running as leah on8765,
+console127.0.0.1:8766. Recognition was initially off; now enabled manually
+for the owner voice test, with mic source confirmed `robot`. Owner attached the previously absent external antenna; Wi-Fi joined at
+192.168.40.136 (MAC7c:4f:ad:1f:6e:c8). UFW logs then showed blocked TCP8765.
+With explicit owner approval, added a source/destination/interface-restricted
+rule; authenticated robot connection now passes and camera streams ~10fps.
+Local TTS phrase at volume0.4 is confirmed clear by the owner; firmware
+reported zero underruns/errors,190548 stereo bytes. Spoken arithmetic question passed; see acceptance below. Build/upload
+logs `/tmp/desk-robot-wifi-{build,flash}.log`; serial `/tmp/desk-robot-wifi-serial.log`.
+Mic level check: speech48samples range0.008–0.172; requested quiet24samples
+0.009–0.087. Samples arrive, but overlapping levels do not establish intelligible
+speech on its own; subsequent real transcription passed as recorded below.
+
+Physical voice acceptance: robot microphone transcribed “What is 2 plus 3?”;
+Hash replied “Two plus three is five.” Owner confirms clear correct speech.
+Final question timing: heard0.84s, first audio/speaking5.89s, done7.59s.
+An earlier partial “What is two?” was answered literally after20.96s to speech;
+short pause segmentation and cold-turn latency remain tuning items.
+Physical camera-grounded question subsequently passed; see below.
+
+Physical vision acceptance: “Hey Rocky, what do you see?” reached Hash with
+the current camera path. It described a person looking toward the camera,
+nearby cables/furniture and partial finger occlusion; owner confirms the
+description and clear speech. Last-word→speaking4.98s, completed12.07s.
+Voice, camera-grounded replies and animated eyes now pass together on the bench.
+The interactive service remains running with robot-mic listening enabled,
+volume0.4, wake phrase “hey Rocky”; Hash identifies itself as Hash.
+Defaults still require manual service start and `listen`; no autostart unit.
+Durable amp contact repair and cold-turn/pause timing remain follow-up work.
