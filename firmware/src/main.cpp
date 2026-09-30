@@ -183,6 +183,15 @@ void handleCommand(String line) {
 
 void setup() {
   Serial.begin(115200);
+  delay(1500);  // Allow the USB console to reconnect after an upload/reset.
+  Serial.printf("boot: heap=%u PSRAM=%u freePSRAM=%u\n",
+                ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+  Wire.begin();
+  Wire.setTimeOut(50);
+  for (uint8_t address : {0x3C, 0x3D}) {
+    Wire.beginTransmission(address);
+    Serial.printf("boot: OLED I2C 0x%02X status=%u (0=ack)\n", address, Wire.endTransmission());
+  }
   randomSeed(esp_random());
 
   // ESP32Servo wants its LEDC timers claimed up front.
@@ -191,16 +200,21 @@ void setup() {
   ESP32PWM::allocateTimer(2);
   ESP32PWM::allocateTimer(3);
 
+  Serial.println(F("boot: face begin"));
   face.begin();
+  Serial.println(F("boot: servos begin (leave unwired on stationary build)"));
   panNeck.begin(PIN_SERVO_PAN, PAN_MIN_DEG, PAN_MAX_DEG, PAN_MAX_SPEED,
                 SERVO_RELAX_MS, PAN_TRIM_DEG, /*glanceRange=*/25.0f);
   tiltNeck.begin(PIN_SERVO_TILT, TILT_MIN_DEG, TILT_MAX_DEG, TILT_MAX_SPEED,
                  SERVO_RELAX_MS, TILT_TRIM_DEG, /*glanceRange=*/10.0f,
                  TILT_INVERT);
 
+  Serial.println(F("boot: speaker begin"));
   speaker.begin(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DIN, SPEAKER_VOLUME,
                 []() { speakDonePending = true; });
+  Serial.println(F("boot: microphone begin"));
   mic.begin(PIN_PDM_CLK, PIN_PDM_DATA, MIC_GAIN);
+  Serial.println(F("boot: camera begin"));
   if (camera.begin()) Serial.println(F("camera: ready"));
 
   demoMode = true;

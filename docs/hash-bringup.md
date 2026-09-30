@@ -24,9 +24,12 @@ Software acceptance on 2026-09-30:
   passed. Whisper, Silero and Smart Turn models are cached locally.
 - Nineteen tests pass, including a real headless service and simulated ESP32
   that receives expression JSON and PCM speech, then shuts down on SIGTERM.
-- SSD1309 PlatformIO build passes. No physical board was attached or flashed.
+- SSD1309 PlatformIO build passes. The first USB flash and startup diagnostic
+  flash succeeded after wiring. Camera initialized and returned a 3,656-byte
+  JPEG; the OLED remains blank and gives I2C NACK at both 0x3C and 0x3D.
+  Display wiring/interface inspection is the next step. Speaker/mic not yet tested.
 
-These prove software paths, not physical OLED, mic or speaker acceptance.
+These do not prove physical OLED, microphone or speaker acceptance.
 This is an owner-operated bench prototype, with no installed background unit.
 The 8–18 s observed response time remains a tuning item.
 
@@ -124,3 +127,20 @@ The supplied pinout is a Seeed reference; source:
 https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/ . Its physical pin order
 agrees with the imported handoff wiring diagram. D7 is not marked ADC-capable;
 camera revision, power peaks and OLED constructor still require bench evidence.
+
+## First USB bench checkpoint
+
+The XIAO enumerates as Espressif USB Serial/JTAG, serial `7C:4F:AD:1F:6E:C8`,
+currently `/dev/ttyACM0`. Prefer the matching `/dev/serial/by-id/` path and
+re-identify it before upload. Chip detection reports ESP32-S3 rev 0.2, 8 MB PSRAM.
+The startup diagnostics print memory, OLED ACK status and initialization stages.
+Status 0 means an ACK; observed status 2 at both display addresses means neither
+address acknowledged. This is not proof of a broken panel: inspect its power,
+ground, SDA/SCL connections and whether the module is configured for I2C.
+
+With USB disconnected, check OLED VCC→3V3, GND→GND, SDA→D4 and SCL→D5 by the
+actual printed pin labels. Confirm header joints are soldered if the board was
+supplied with loose headers. Obtain a photo of the OLED connector and XIAO
+connections before choosing a different display driver or changing power.
+The serial console works after the startup delay; opening a serial client can
+reset this board, so wait for the USB-only startup line before sending commands.
